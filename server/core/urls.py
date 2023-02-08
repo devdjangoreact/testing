@@ -49,5 +49,5 @@ urlpatterns = [
     re_path(
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
-    # re_path("", TemplateView.as_view(template_name="index.html"),  name=""),
+    re_path("", TemplateView.as_view(template_name="index.html"),  name=""),
 ]

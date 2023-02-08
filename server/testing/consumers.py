@@ -22,8 +22,7 @@ class Testing(AsyncWebsocketConsumer):
         data_json = json.load(f)
         for item in data_json:
             for key, value in item.items():
-                if re.findall(text_data, value):
-                    print(key , value)
+                if re.findall(text_data.lower(), value.lower()):
                     completions.append(item)
                     break    
                     

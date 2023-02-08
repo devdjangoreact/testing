@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  start-server:
+    build:
+      context: ./server
+    command: python manage.py runserver 0.0.0.0:8000
+    container_name: start-server
+    depends_on:
+      - start-redis
+      - start-database
+    environment:
+      - PGDATABASE=start
+      - PGUSER=start
+      - PGPASSWORD=start
+      - PGHOST=start-database
+      - REDIS_URL=redis://start-redis:6379/0
+    ports:
+      - 8003:8000
+    volumes:
+      - ./server:/usr/src/app
+
+  start-redis:
+    container_name: start-redis
+    image: redis:7-alpine
+
+  start-database:
+    container_name: start-database
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=start
+      - POSTGRES_PASSWORD=start
+    expose:
+      - 5432
+    volumes:
+      - start-database:/var/lib/postgresql/data
+
+  start-client:
+    build:
+      context: ./client
+    command: yarn start
+    container_name: start-client
+    depends_on:
+      - start-server
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_BASE_URL=http://localhost:8003
+      - REACT_APP_GOOGLE_MAPS_KEY=<YOUR_API_KEY>
+    ports:
+      - 3001:3000
+    stdin_open: true
+    volumes:
+      - ./client:/usr/src/app
+
+volumes:
+  start-database:

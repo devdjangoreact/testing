@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  start-server:
+    build:
+      context: ./server
+    command: python manage.py runserver 0.0.0.0:8000 
+    container_name: start-server
+    depends_on:
+      - start-redis
+      - start-database
+    env_file:
+      - ./.env.dev
+    ports:
+      - 8000:8000
+    # expose:
+    #   - 8000
+    volumes:
+      - ./server:/usr/src/app
+    volumes:
+      - static_volume:/start-server/staticfiles
+      - media_volume:/start-server/mediafiles
+
+  start-redis:
+    container_name: start-redis
+    image: redis:7-alpine
+
+  start-database:
+    container_name: start-database
+    image: postgres:15-alpine
+    # environment:
+    #   - POSTGRES_USER=start
+    #   - POSTGRES_PASSWORD=start
+    env_file:
+      - ./.env.dev.db
+    expose:
+      - 5432
+    volumes:
+      - start-database:/var/lib/postgresql/data
+      
+  # nginx-proxy:
+  #   container_name: nginx-proxy
+  #   build: nginx
+  #   restart: always
+  #   ports:
+  #     - 443:443
+  #     - 80:80
+  #   volumes:
+  #     - static_volume:/start-server/staticfiles
+  #     - media_volume:/start-server/mediafiles
+  #     - certs:/etc/nginx/certs
+  #     - html:/usr/share/nginx/html
+  #     - vhost:/etc/nginx/vhost.d
+  #     - /var/run/docker.sock:/tmp/docker.sock:ro
+  #   depends_on:
+  #     - start-server
+
+  # nginx-proxy-letsencrypt:
+  #   image: jrcs/letsencrypt-nginx-proxy-companion
+  #   env_file:
+  #     - ./.env.dev
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - certs:/etc/nginx/certs
+  #     - html:/usr/share/nginx/html
+  #     - vhost:/etc/nginx/vhost.d
+  #     - acme:/etc/acme.sh
+  #   depends_on:
+  #     - nginx-proxy
+
+  start-client:
+    build:
+      context: ./client
+    command: yarn start
+    container_name: start-client
+    depends_on:
+      - start-server
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_BASE_URL=http://localhost:8003
+      - REACT_APP_GOOGLE_MAPS_KEY=<YOUR_API_KEY>
+    ports:
+      - 3000:3000
+    stdin_open: true
+    volumes:
+      - ./client:/usr/src/app
+
+volumes:
+  start-database:
+  static_volume:
+  media_volume:
+  certs:
+  html:
+  vhost:
+  acme:
